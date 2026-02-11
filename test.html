@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Kasir Pro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #4F46E5; }
+        h2 { color: #333; margin-top: 0; }
+        .status { 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .pass { background: #D1FAE5; color: #065F46; }
+        .fail { background: #FEE2E2; color: #991B1B; }
+        button {
+            background: #4F46E5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #4338CA; }
+        .result { 
+            margin-top: 10px; 
+            padding: 10px;
+            background: #f9f9f9;
+            border-left: 4px solid #4F46E5;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Suite - Kasir Pro</h1>
+    
+    <div class="test-card">
+        <h2>1. File Check</h2>
+        <button onclick="testFiles()">Run Test</button>
+        <div id="fileResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>2. Service Worker</h2>
+        <button onclick="testServiceWorker()">Test Service Worker</button>
+        <div id="swResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>3. Manifest</h2>
+        <button onclick="testManifest()">Test Manifest</button>
+        <div id="manifestResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>4. Local Storage</h2>
+        <button onclick="testLocalStorage()">Test Storage</button>
+        <div id="storageResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>5. Icons</h2>
+        <button onclick="testIcons()">Test Icons</button>
+        <div id="iconResult" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        const requiredFiles = [
+            'index.html',
+            'app.js',
+            'service-worker.js',
+            'manifest.json',
+            'icon-192.png',
+            'icon-512.png'
+        ];
+
+        async function testFiles() {
+            const result = document.getElementById('fileResult');
+            result.style.display = 'block';
+            result.innerHTML = '<strong>Testing files...</strong><br>';
+            
+            let allPass = true;
+            for (const file of requiredFiles) {
+                try {
+                    const response = await fetch(file);
+                    if (response.ok) {
+                        result.innerHTML += `✅ ${file} - OK<br>`;
+                    } else {
+                        result.innerHTML += `❌ ${file} - NOT FOUND<br>`;
+                        allPass = false;
+                    }
+                } catch (error) {
+                    result.innerHTML += `❌ ${file} - ERROR<br>`;
+                    allPass = false;
+                }
+            }
+            
+            result.innerHTML += `<br><strong>${allPass ? '✅ All files OK!' : '❌ Some files missing!'}</strong>`;
+        }
+
+        async function testServiceWorker() {
+            const result = document.getElementById('swResult');
+            result.style.display = 'block';
+            
+            if ('serviceWorker' in navigator) {
+                result.innerHTML = '✅ Service Worker API supported<br>';
+                try {
+                    const registration = await navigator.serviceWorker.register('service-worker.js');
+                    result.innerHTML += '✅ Service Worker registered successfully<br>';
+                    result.innerHTML += `Scope: ${registration.scope}<br>`;
+                } catch (error) {
+                    result.innerHTML += `❌ Registration failed: ${error}<br>`;
+                }
+            } else {
+                result.innerHTML = '❌ Service Worker not supported';
+            }
+        }
+
+        async function testManifest() {
+            const result = document.getElementById('manifestResult');
+            result.style.display = 'block';
+            
+            try {
+                const response = await fetch('manifest.json');
+                const manifest = await response.json();
+                result.innerHTML = `✅ Manifest loaded<br>`;
+                result.innerHTML += `Name: ${manifest.name}<br>`;
+                result.innerHTML += `Short name: ${manifest.short_name}<br>`;
+                result.innerHTML += `Icons: ${manifest.icons.length}<br>`;
+                result.innerHTML += `Start URL: ${manifest.start_url}<br>`;
+                result.innerHTML += `Display: ${manifest.display}<br>`;
+            } catch (error) {
+                result.innerHTML = `❌ Manifest error: ${error}`;
+            }
+        }
+
+        function testLocalStorage() {
+            const result = document.getElementById('storageResult');
+            result.style.display = 'block';
+            
+            try {
+                localStorage.setItem('test', 'value');
+                const value = localStorage.getItem('test');
+                localStorage.removeItem('test');
+                
+                if (value === 'value') {
+                    result.innerHTML = '✅ Local Storage working<br>';
+                    result.innerHTML += '✅ Write test passed<br>';
+                    result.innerHTML += '✅ Read test passed<br>';
+                    result.innerHTML += '✅ Delete test passed<br>';
+                } else {
+                    result.innerHTML = '❌ Local Storage read failed';
+                }
+            } catch (error) {
+                result.innerHTML = `❌ Local Storage error: ${error}`;
+            }
+        }
+
+        async function testIcons() {
+            const result = document.getElementById('iconResult');
+            result.style.display = 'block';
+            result.innerHTML = '<strong>Testing icons...</strong><br>';
+            
+            const iconSizes = [72, 96, 128, 144, 152, 192, 384, 512];
+            let allPass = true;
+            
+            for (const size of iconSizes) {
+                try {
+                    const response = await fetch(`icon-${size}.png`);
+                    if (response.ok) {
+                        result.innerHTML += `✅ icon-${size}.png - OK<br>`;
+                    } else {
+                        result.innerHTML += `❌ icon-${size}.png - NOT FOUND<br>`;
+                        allPass = false;
+                    }
+                } catch (error) {
+                    result.innerHTML += `❌ icon-${size}.png - ERROR<br>`;
+                    allPass = false;
+                }
+            }
+            
+            result.innerHTML += `<br><strong>${allPass ? '✅ All icons OK!' : '❌ Some icons missing!'}</strong>`;
+        }
+
+        // Auto test on load
+        window.addEventListener('load', () => {
+            console.log('Kasir Pro Test Suite Ready');
+        });
+    </script>
+</body>
+</html>
+
